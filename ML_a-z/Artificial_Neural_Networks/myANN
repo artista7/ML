@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Mar 31 21:54:46 2018
+
+@author: bluedanube
+"""
+
+import pandas as pd
+dataset = pd.read_csv('Churn_Modelling.csv')
+
+#initializing x and y
+X = dataset.iloc[:, 3:13].values
+y = dataset.iloc[:, 13].values
+
+#no imputer needed. Let's encode row 2 and 3
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+labelEncoder = LabelEncoder()
+X[:, 1] = labelEncoder.fit_transform(X[:, 1])
+X[:, 2] = labelEncoder.fit_transform(X[:, 2])
+oneHotEncoder = OneHotEncoder(categorical_features=[1])
+X = oneHotEncoder.fit_transform(X).toarray()
+X = X[:, 1:]
+
+#test_train split
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+
+#feature selection
+from sklearn.preprocessing import StandardScaler
+sc_x = StandardScaler()
+X_train = sc_x.fit_transform(X_train)
+X_test = sc_x.fit_transform(X_test)
+
+
+#ANN
+#import keras
+from keras.models import Sequential
+from keras.layers import Dense
+
+#Initialising the ANN
+classifier = Sequential()
+classifier.add(Dense(output_dim = 6, init='uniform', input_dim=11, activation='relu'))
+classifier.add(Dense(output_dim = 6, init='uniform', activation='relu'))
+classifier.add(Dense(output_dim = 1, init='uniform', input_dim=11, activation='sigmoid'))
