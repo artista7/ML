@@ -4,20 +4,22 @@ import pandas as pd
 
 #importing dataset
 df = pd.read_csv('Churn_Modelling.csv');
-x = df.iloc[:, [1, 3, 4, 5, 6, 7 ,8, 9, 10, 11, 12]].values
+x = df.iloc[:, 3:13].values
 y = df.iloc[:, 13].values
 
 
 # Encoding categorical data
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 labelencoder = LabelEncoder()
+x[:, 1] = labelencoder.fit_transform(x[:, 1])
 x[:, 2] = labelencoder.fit_transform(x[:, 2])
-x[:, 3] = labelencoder.fit_transform(x[:, 3])
-onehotencoder = OneHotEncoder(categorical_features = [2, 3])
+onehotencoder = OneHotEncoder(categorical_features = [1])
 x = onehotencoder.fit_transform(x).toarray()
+x = x[:, 1:]
+
 
 #splitting the dataset
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=0)
 
 #Feature scaling
@@ -26,7 +28,39 @@ sc_x = StandardScaler()
 x_train = sc_x.fit_transform(x_train)
 x_test = sc_x.transform(x_test)
 
-#fitting via logistic regression
+
+#importing Keras library
+import keras
+from keras.models import Sequential
+from keras.layers import Dense
+
+#initializing ANN
+classifier = Sequential()
+classifier.add(Dense(input_dim = 11, init = 'uniform', output_dim = 6, activation = 'relu'))
+classifier.add(Dense(init = 'uniform', output_dim = 6, activation = 'relu'))
+classifier.add(Dense(init = 'uniform', output_dim = 1, activation = 'sigmoid'))
+#Compliling the ANN
+classifier.compile(optimizer = 'adam', loss = 'binary_crossentropy', metrics = ['accuracy'])
+
+#fitting ANN to training dataset
+classifier.fit(x_train, y_train, batch_size = 10, epochs = 5)
+
+
+#predicting the test set result
+y_pred = classifier.predict(x_test)
+y_pred = (y_pred > 0.5)
+
+#making the confusion matrix
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(y_test, y_pred)
+
+
+
+
+
+
+
+'''#fitting via logistic regression
 from sklearn.linear_model import LogisticRegression
 clf = LogisticRegression()
 #find best param
@@ -51,4 +85,4 @@ accuracy_score(y_test, y_pred)
 from sklearn.model_selection import cross_val_score
 accuracies = cross_val_score(estimator = regressor, X = x_train, y=y_train, cv = 10)
 print("Mean accuracy according to 10-fold cross validation model - %s"%accuracies.mean())
-print("Standard deviation according to 10-fold cross validation model - %s"%accuracies.std())
+print("Standard deviation according to 10-fold cross validation model - %s"%accuracies.std())'''
